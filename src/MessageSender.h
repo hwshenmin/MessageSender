@@ -1,11 +1,8 @@
-#if !defined(AFX_TESTSENDER_H__8D684DED_C14B_4E2F_91F6_029482DB0D1F__INCLUDED_)
-#define AFX_TESTSENDER_H__8D684DED_C14B_4E2F_91F6_029482DB0D1F__INCLUDED_
-
+#pragma once
 #include "ICommandObserver.h"
 #include "core/threads/src/Thread.h"
 #include "core/message/src/StructuredEventSupplier.h"
 #include "core/message/src/NameValuePair.h"
-#include <boost/shared_ptr.hpp>
 
 
 namespace TA_Base_Core
@@ -66,5 +63,3 @@ namespace TA_Base_Core
 
     typedef boost::shared_ptr<MessageSender> MessageSenderPtr;
 }
-
-#endif // !defined(AFX_TESTSENDER_H__8D684DED_C14B_4E2F_91F6_029482DB0D1F__INCLUDED_)

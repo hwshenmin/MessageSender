@@ -24,6 +24,7 @@
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="false"
 			CharacterSet="0"
+			DeleteExtensionsOnClean="*.pch;*.obj;*.ilk;*.tlb;*.tli;*.tlh;*.tmp;*.rsp;*.pgc;*.pgd;*.meta;$(TargetPath)"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
@@ -46,7 +47,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="src;..\..\..\..\core\threads\src;..\..\..\..\;..\..\..\..\..\cots\omniORB\omniORB_4.1.6;..\..\..\..\..\cots\omniORB\omniORB_4.1.6\include;..\..\..\..\..\cots\omniORB\omniORB_4.1.6\include\COS;..\..\..\..\..\cots\boost\boost_1_39_0;..\..\..\..\..\..\build\win32_n\transactive;..\..\..\..\..\..\build\win32_n\transactive\core\message\IDL\src;..\..\..\..\..\..\build\win32_n\transactive\core\exceptions\IDL\src;..\..\..\..\..\..\build\win32_n\transactive\core\alarm\IDL\src"
+				AdditionalIncludeDirectories="..\MessageUtility\src;src;..\..\..\..\core\threads\src;..\..\..\..\;..\..\..\..\..\cots\omniORB\omniORB_4.1.6;..\..\..\..\..\cots\omniORB\omniORB_4.1.6\include;..\..\..\..\..\cots\omniORB\omniORB_4.1.6\include\COS;..\..\..\..\..\cots\boost\boost_1_39_0;..\..\..\..\..\..\build\win32_n\transactive;..\..\..\..\..\..\build\win32_n\transactive\core\message\IDL\src;..\..\..\..\..\..\build\win32_n\transactive\core\exceptions\IDL\src;..\..\..\..\..\..\build\win32_n\transactive\core\alarm\IDL\src"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;__WIN32__;__x86__;__NT__;__OSVERSION__=4;_USE_32BIT_TIME_T;_CRT_SECURE_NO_WARNINGS"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -208,19 +209,11 @@
 			Filter="cpp"
 			>
 			<File
-				RelativePath=".\src\ICommandObserver.h"
-				>
-			</File>
-			<File
 				RelativePath=".\src\main.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\src\MainGuard.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\MainGuard.h"
+				RelativePath="..\MessageUtility\src\MainGuard.cpp"
 				>
 			</File>
 			<File
@@ -228,11 +221,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\src\MessageSender.h"
-				>
-			</File>
-			<File
-				RelativePath=".\src\stdafx.cpp"
+				RelativePath="..\MessageUtility\src\stdafx.cpp"
 				>
 				<FileConfiguration
 					Name="Debug|Win32"
@@ -253,6 +242,26 @@
 			</File>
 			<File
 				RelativePath=".\src\overrides\StructuredEventConsumer.cpp"
+				>
+			</File>
+		</Filter>
+		<Filter
+			Name="include"
+			>
+			<File
+				RelativePath="..\MessageUtility\src\ICommandObserver.h"
+				>
+			</File>
+			<File
+				RelativePath="..\MessageUtility\src\MainGuard.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\MessageSender.h"
+				>
+			</File>
+			<File
+				RelativePath="..\MessageUtility\src\stdafx.h"
 				>
 			</File>
 		</Filter>

@@ -40,7 +40,7 @@ int main(int argc, char* argv[])
         m_senders.push_back( message_sender );
     }
 
-    main_guard.wait_for_quit();
+    main_guard.wait_for_user_input();
 
     for ( size_t i = 0; i < region_filter_number; ++i )
     {
