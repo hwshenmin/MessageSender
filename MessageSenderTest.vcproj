@@ -48,7 +48,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories="..\MessageUtility\src;src;..\..\..\..\core\threads\src;..\..\..\..\;..\..\..\..\..\cots\omniORB\omniORB_4.1.6;..\..\..\..\..\cots\omniORB\omniORB_4.1.6\include;..\..\..\..\..\cots\omniORB\omniORB_4.1.6\include\COS;..\..\..\..\..\cots\boost\boost_1_39_0;..\..\..\..\..\..\build\win32_n\transactive;..\..\..\..\..\..\build\win32_n\transactive\core\message\IDL\src;..\..\..\..\..\..\build\win32_n\transactive\core\exceptions\IDL\src;..\..\..\..\..\..\build\win32_n\transactive\core\alarm\IDL\src"
-				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;__WIN32__;__x86__;__NT__;__OSVERSION__=4;_USE_32BIT_TIME_T;_CRT_SECURE_NO_WARNINGS"
+				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;__WIN32__;__x86__;__NT__;_AFXDLL;__OSVERSION__=4;_USE_32BIT_TIME_T;_CRT_SECURE_NO_WARNINGS"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
