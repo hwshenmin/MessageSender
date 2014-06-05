@@ -7,12 +7,12 @@ namespace TA_Base_Core
 
     struct MyChannelObserver : TA_Base_Core::IChannelObserver
     {
-        MyChannelObserver( const std::string& channel_name, unsigned long location_key );
+        MyChannelObserver( const std::string& channel_name );
 
-        virtual bool onChannelAvailable( const std::string& serviceAddr, const CosNotifyChannelAdmin::EventChannel_ptr channel, const TA_Base_Core::IChannelLocator_ptr channelLocator );
+        bool ready();
+
+        virtual bool onChannelAvailable( const std::string& serviceAddr, const CosNotifyChannelAdmin::EventChannel_ptr, const TA_Base_Core::IChannelLocator_ptr );
         virtual void onChannelUnavailable( const std::string& serviceAddr );
-
-        bool is_channel_ready();
 
     private:
 

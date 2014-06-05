@@ -4,7 +4,6 @@
 #include "MyChannelObserver.h"
 #include "core/threads/src/Thread.h"
 #include "core/message/src/StructuredEventSupplier.h"
-#include "core/message/src/NameValuePair.h"
 
 
 namespace TA_Base_Core

@@ -213,10 +213,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\src\CommandLineHelper.h"
-				>
-			</File>
-			<File
 				RelativePath=".\src\main.cpp"
 				>
 			</File>
@@ -229,19 +225,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\src\MessageSender.h"
-				>
-			</File>
-			<File
 				RelativePath=".\src\MyChannelObserver.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\MyChannelObserver.h"
-				>
-			</File>
-			<File
-				RelativePath=".\src\Parameter.h"
 				>
 			</File>
 		</Filter>
@@ -261,11 +245,27 @@
 			Name="include"
 			>
 			<File
+				RelativePath=".\src\CommandLineHelper.h"
+				>
+			</File>
+			<File
 				RelativePath="..\MessageUtility\src\ICommandObserver.h"
 				>
 			</File>
 			<File
 				RelativePath="..\MessageUtility\src\MainGuard.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\MessageSender.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\MyChannelObserver.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\Parameter.h"
 				>
 			</File>
 			<File

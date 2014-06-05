@@ -6,7 +6,7 @@
 #include "core/message/src/MessageConstants.h"
 #include "core/message/src/ConnectionChecker.h"
 #include "core/synchronisation/src/NonReEntrantThreadLockable.h"
-#include "core\synchronisation\src\ThreadGuard.h"
+#include "core/synchronisation/src/ThreadGuard.h"
 
 
 namespace TA_Base_Core
@@ -19,8 +19,7 @@ namespace TA_Base_Core
           m_half_done_event( NULL ),
           m_running( true )
     {
-        unsigned long location_key = TA_Base_Core::getRunParamValue( RPARAM_LOCATIONKEY, 100 );
-        m_channel_observer.reset( new MyChannelObserver( parameter->m_channel_name, location_key ) );
+        m_channel_observer.reset( new MyChannelObserver( parameter->m_channel_name ) );
 
         m_data = new char[m_parameter->m_data.size() + 11];
         ::sprintf( m_data, "%10d%s", 0, m_parameter->m_data.c_str() );
@@ -48,7 +47,7 @@ namespace TA_Base_Core
     {
         while ( m_running )
         {
-            while ( false == m_channel_observer->is_channel_ready() && true == m_running )
+            while ( false == m_channel_observer->ready() && true == m_running )
             {
                 TA_Base_Core::Thread::sleep( 10 );
             }
