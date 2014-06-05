@@ -209,6 +209,14 @@
 			Filter="cpp"
 			>
 			<File
+				RelativePath=".\src\CommandLineHelper.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\CommandLineHelper.h"
+				>
+			</File>
+			<File
 				RelativePath=".\src\main.cpp"
 				>
 			</File>
@@ -221,16 +229,20 @@
 				>
 			</File>
 			<File
-				RelativePath="..\MessageUtility\src\stdafx.cpp"
+				RelativePath=".\src\MessageSender.h"
 				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="1"
-					/>
-				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\src\MyChannelObserver.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\MyChannelObserver.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\Parameter.h"
+				>
 			</File>
 		</Filter>
 		<Filter
@@ -257,14 +269,26 @@
 				>
 			</File>
 			<File
-				RelativePath=".\src\MessageSender.h"
+				RelativePath="..\MessageUtility\src\stdafx.cpp"
 				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="1"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\MessageUtility\src\stdafx.h"
 				>
 			</File>
 		</Filter>
+		<File
+			RelativePath=".\src\command_lines.txt"
+			>
+		</File>
 	</Files>
 	<Globals>
 	</Globals>

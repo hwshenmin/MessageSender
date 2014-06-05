@@ -5,92 +5,28 @@
 #include "core/message/IDL/src/CommsMessageCorbaDef.h"
 #include "core/message/src/MessageConstants.h"
 #include "core/message/src/ConnectionChecker.h"
-
-
-namespace
-{
-
-    std::vector<TA_Base_Core::NameValuePair> extract_name_value_pairs( const std::string& str )
-    {
-        std::vector<TA_Base_Core::NameValuePair> pair_list;
-
-        typedef boost::tokenizer< boost::char_separator<char> > tokenizer;
-        boost::char_separator<char> sep( ":,;" );
-        tokenizer tokens( str, sep );
-
-        for ( tokenizer::iterator tok_iter = tokens.begin(); tok_iter != tokens.end(); ++tok_iter )
-        {
-            std::string pair_string = *tok_iter;
-            size_t equal_pos = pair_string.find( "=" );
-
-            if ( equal_pos != std::string::npos )
-            {
-                std::string name = pair_string.substr( 0, equal_pos );
-                std::string value = pair_string.substr( equal_pos + 1, std::string::npos );
-                TA_Base_Core::NameValuePair the_pair( name, TA_Base_Core::NameValuePair::EQUALS, value );
-                pair_list.push_back( the_pair );
-            }
-            else
-            {
-                std::cout << str << std::endl;
-                TA_ASSERT(false, "NameValuePair requestes an evaluation type.")
-            }
-        }
-
-        return pair_list;
-    }
-
-
-    void add_to_filter_data( TA_Base_Core::FilterData& filter_data, const std::vector<TA_Base_Core::NameValuePair>& name_value_pairs )
-    {
-        for ( size_t i = 0; i < name_value_pairs.size(); ++i )
-        {
-            filter_data.push_back( &const_cast<TA_Base_Core::NameValuePair&>(name_value_pairs[i]) );
-        }
-    }
-
-}
+#include "core/synchronisation/src/NonReEntrantThreadLockable.h"
+#include "core\synchronisation\src\ThreadGuard.h"
 
 
 namespace TA_Base_Core
 {
 
-    MessageSender::MessageSender( unsigned long location_key,
-                                  unsigned long entity_key,
-                                  unsigned long interval,
-                                  std::string message_load,
-                                  const std::string& channel_name,
-                                  const std::string& domain_name,
-                                  const std::string& type_name,
-                                  const std::string& filter_data )
-        : m_location_key( location_key ),
-          m_entity_key( entity_key ),
-          m_interval( interval ),
-          m_message_load( message_load.c_str() ),
-          m_channel_name( channel_name ),
-          m_domain_name( domain_name ),
-          m_type_name( type_name ),
-          m_filter_data( filter_data ),
-          m_running( true ),
-          m_supplier( TA_Base_Core::gGetStructuredEventSupplierForChannel( m_channel_name ) ),
-          IChannelObserver( channel_name, location_key )
+    MessageSender::MessageSender( ParameterPtr parameter, boost::shared_ptr<TA_Base_Core::StructuredEventSupplier> supplier )
+        : m_parameter( parameter ),
+          m_supplier( supplier ),
+          m_data( NULL ),
+          m_half_done_event( NULL ),
+          m_running( true )
     {
-        static TA_Base_Core::NameValuePair priorityField( CosNotification::Priority, "0" );
-        m_var_header.push_back( &priorityField );
+        unsigned long location_key = TA_Base_Core::getRunParamValue( RPARAM_LOCATIONKEY, 100 );
+        m_channel_observer.reset( new MyChannelObserver( parameter->m_channel_name, location_key ) );
 
-        //static TA_Base_Core::NameValuePair regionFilter( TA_Base_Core::REGION_FILTER_NAME, boost::lexical_cast<std::string>( m_location_key ) );
-        // static TA_Base_Core::NameValuePair messageTypeFilter( TA_Base_Core::MESSAGETYPE_FILTER_NAME, m_type_name.c_str() );
-        //m_filterable_data.push_back( &regionFilter );
-        // m_filterable_data.push_back( &messageTypeFilter );
+        m_data = new char[m_parameter->m_data.size() + 11];
+        ::sprintf( m_data, "%10d%s", 0, m_parameter->m_data.c_str() );
 
-        if ( false == m_filter_data.empty() )
-        {
-            std::vector<TA_Base_Core::NameValuePair>* name_value_pairs = new std::vector<TA_Base_Core::NameValuePair>;
-            *name_value_pairs = extract_name_value_pairs( m_filter_data );
-            add_to_filter_data( m_filterable_data, *name_value_pairs );
-        }
-
-        TA_Base_Core::ChannelLocatorConnectionMgr::getInstance().attach(this);
+        m_half_done_event = new CosNotification::StructuredEvent;
+        populate_half_done_event();
 
         start();
     }
@@ -99,12 +35,34 @@ namespace TA_Base_Core
     MessageSender::~MessageSender()
     {
         terminateAndWait();
+
+        delete m_data;
+        m_data = NULL;
+
+        delete m_half_done_event;
+        m_half_done_event = NULL;
     }
 
 
     void MessageSender::run()
     {
-        send_message();
+        while ( m_running )
+        {
+            while ( false == m_channel_observer->is_channel_ready() && true == m_running )
+            {
+                TA_Base_Core::Thread::sleep( 10 );
+            }
+
+            if ( false == m_running )
+            {
+                break;
+            }
+
+            send_message( next_data() );
+            my_sleep();
+        }
+
+        m_running = true; // for next time
     }
 
 
@@ -114,80 +72,66 @@ namespace TA_Base_Core
     }
 
 
-    void MessageSender::send_message()
-    {
-        unsigned long seq_num = 1;
-        std::stringstream strm;
-
-        while ( m_running )
-        {
-            if ( false == m_avaliable_channels.empty() )
-            {
-                strm.clear();
-                strm.str("");
-                strm << std::setw(10) << seq_num++ << ": " << m_message_load;
-
-                send_message_impl( strm.str() );
-
-                if ( ( 0 == m_interval && seq_num % 1000 == 0 ) || (0 < m_interval && seq_num % 100 == 0 ) )
-                {
-                    std::cout << "\rsend messages total number:" << seq_num << std::endl;
-                }
-                else
-                {
-                    std::cout << ".";
-                }
-            }
-
-            if ( true == m_running && 0 < m_interval  )
-            {
-                for ( size_t i = 0; true == m_running && i < m_interval; i+= 10 )
-                {
-                    TA_Base_Core::Thread::sleep( 10 );
-                }
-            }
-
-            if ( true == m_running && m_avaliable_channels.empty() )
-            {
-                TA_Base_Core::Thread::sleep( 100 );
-            }
-        }
-
-        m_running = true; // for next time
-    }
-
-
-
-    void MessageSender::send_message_impl( const std::string& messageString )
+    void MessageSender::send_message( const char* data )
     {
         try
         {
-            CORBA::Any data;
-            data <<= messageString.c_str();
+            TA_Base_Core::CommsMessageCorbaDef* comms_message = new TA_Base_Core::CommsMessageCorbaDef;
 
-            TA_Base_Core::CommsMessageCorbaDef* commsMessage = new TA_Base_Core::CommsMessageCorbaDef;
+            comms_message->createTime = time( NULL );
+            comms_message->messageTypeKey = m_parameter->m_type_name.c_str();
+            comms_message->assocEntityKey = 0;
+            comms_message->messageState <<= data;
 
-            commsMessage->createTime = time( NULL );
-            commsMessage->messageTypeKey = m_type_name.c_str();
-            commsMessage->assocEntityKey = m_entity_key;
-            commsMessage->messageState = data;
+            CosNotification::StructuredEvent* event = new CosNotification::StructuredEvent( *m_half_done_event );
+            event->remainder_of_body <<= comms_message;
 
-            CosNotification::StructuredEvent* event = new CosNotification::StructuredEvent;
-            event->remainder_of_body <<= commsMessage;
-
-            TA_Base_Core::gPopulateStructuredEventHeader( *event,
-                                                          m_domain_name,
-                                                          m_type_name,
-                                                          &m_var_header,
-                                                          &m_filterable_data );
-
-            TA_ASSERT(m_supplier, "m_supplier != NULL");
-            m_supplier->publishEvent(*event);
+            m_supplier->publishEvent( *event );
         }
-        catch (...)
+        catch ( std::exception& ex )
         {
-            std::cout << "MessageSender::send_message_impl - caught exception." << std::endl;
+            std::cout << "MessageSender::send_message - std::exception: " << ex.what() << std::endl;
+            TA_Base_Core::Thread::sleep( 100 );
         }
+        catch ( ... )
+        {
+            std::cout << "MessageSender::send_message - exception." << std::endl;
+            TA_Base_Core::Thread::sleep( 100 );
+        }
+    }
+
+
+    const char* MessageSender::next_data()
+    {
+        static size_t counter = 0;
+        static TA_Base_Core::NonReEntrantThreadLockable lock;
+
+        {
+            TA_THREADGUARD( lock );
+            ++counter;
+        }
+
+        std::string counter_str = boost::lexical_cast<std::string>( counter );
+
+        for ( size_t i = 0; i < counter_str.size() || i < 10; ++i )
+        {
+            m_data[i] = ( i < counter_str.size() ? counter_str[i] : ' ' );
+        }
+
+        if ( 0 == counter % 100 )
+        {
+            std::cout << "\r" << "TOTAL: " << counter << std::endl;
+        }
+        else if ( 0 == counter % 10 )
+        {
+            std::cout << "\r           \r.";
+        }
+        else
+        {
+            std::cout << ".";
+        }
+
+        return m_data;
     }
 
 
@@ -195,9 +139,9 @@ namespace TA_Base_Core
     {
         try
         {
-            unsigned long new_interval = boost::lexical_cast<unsigned long>(command);
-            std::cout << "\rInterval changed from " << m_interval << " to " << new_interval << std::endl;
-            m_interval = new_interval;
+            unsigned long interval = boost::lexical_cast<unsigned long>(command);
+            std::cout << "\r" << "INTERVAL CHANGE: FROM " << m_parameter->m_interval << " TO " << interval << std::endl;
+            m_parameter->m_interval = interval;
         }
         catch (...)
         {
@@ -205,20 +149,80 @@ namespace TA_Base_Core
     }
 
 
-    bool MessageSender::onChannelAvailable( const std::string& serviceAddr, const CosNotifyChannelAdmin::EventChannel_ptr channel, const TA_Base_Core::IChannelLocator_ptr channelLocator )
+    void MessageSender::my_sleep()
     {
-        m_avaliable_channels.push_back( serviceAddr );
-        return true;
+        if ( 0 == m_parameter->m_interval )
+        {
+            return;
+        }
+
+        size_t STEP = m_parameter->m_interval;
+
+        if ( 0 < STEP && STEP < 10 )
+        {
+            STEP = 1;
+        }
+        else if ( 10 <= STEP && STEP < 100 )
+        {
+            STEP = 5;
+        }
+        else if ( 100 <= STEP && STEP < 1000 )
+        {
+            STEP = 10;
+        }
+        else if ( 1000 <= STEP && STEP < 10000 )
+        {
+            STEP = 100;
+        }
+        else
+        {
+            STEP = 1000;
+        }
+
+        for ( size_t i = 0; i < m_parameter->m_interval && true == m_running; i += STEP )
+        {
+            TA_Base_Core::Thread::sleep( STEP );
+        }
     }
 
 
-    void MessageSender::onChannelUnavailable( const std::string& serviceAddr )
+    void MessageSender::populate_half_done_event()
     {
-        std::vector<std::string>::iterator findIt = std::find( m_avaliable_channels.begin(), m_avaliable_channels.end(), serviceAddr );
+        // Fixed Header
+        m_half_done_event->header.fixed_header.event_type.domain_name = m_parameter->m_domain_name.c_str();
+        m_half_done_event->header.fixed_header.event_type.type_name = m_parameter->m_type_name.c_str();
 
-        if ( findIt != m_avaliable_channels.end() )
+        // Variable Header
+        m_half_done_event->header.variable_header.length(2);
+        m_half_done_event->header.variable_header[0].name = CosNotification::Priority;
+        m_half_done_event->header.variable_header[0].value <<= static_cast<const char*>( "0" );
+        m_half_done_event->header.variable_header[1].name = TA_Base_Core::SENDER_ENTITY_FIELDNAME;
+        m_half_done_event->header.variable_header[1].value <<= TA_Base_Core::RunParams::getInstance().get(RPARAM_ENTITYNAME).c_str();
+
+        // Filterable Body
+        parse_filterable_date();
+        m_half_done_event->filterable_data.length( m_filterable_data.size() );
+
+        for ( size_t i = 0; i < m_filterable_data.size(); ++i )
         {
-            m_avaliable_channels.erase( findIt );
+            m_half_done_event->filterable_data[i].name = m_filterable_data[i].first.c_str();
+            m_half_done_event->filterable_data[i].value <<= m_filterable_data[i].second.c_str();
+        }
+    }
+
+
+    void MessageSender::parse_filterable_date()
+    {
+        m_filterable_data.clear();
+
+        const char* filterable_data_regex_str = "(?x) ([^ ,;=]+) = ([^ ,;=]+)";
+        const boost::regex filterable_data_regex( filterable_data_regex_str );
+        boost::sregex_iterator it( m_parameter->m_filterable_data.begin(), m_parameter->m_filterable_data.end(), filterable_data_regex );
+        boost::sregex_iterator end;
+
+        for ( ; it != end; ++it )
+        {
+            m_filterable_data.push_back( std::make_pair( it->str(1), it->str(2) ) );
         }
     }
 

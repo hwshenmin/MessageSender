@@ -1,5 +1,7 @@
 #pragma once
 #include "ICommandObserver.h"
+#include "Parameter.h"
+#include "MyChannelObserver.h"
 #include "core/threads/src/Thread.h"
 #include "core/message/src/StructuredEventSupplier.h"
 #include "core/message/src/NameValuePair.h"
@@ -7,59 +9,41 @@
 
 namespace TA_Base_Core
 {
+
     class MessageSender : public TA_Base_Core::Thread,
-                          public ICommandObserver,
-                          public TA_Base_Core::IChannelObserver
+                          public ICommandObserver
     {
     public:
 
-        MessageSender( unsigned long location_key,
-                       unsigned long entity_key,
-                       unsigned long interval,
-                       std::string message_load,
-                       const std::string& channel_name,
-                       const std::string& domain_name,
-                       const std::string& type_name,
-                       const std::string& filter_data );
-
+        MessageSender( ParameterPtr parameter, boost::shared_ptr<TA_Base_Core::StructuredEventSupplier> supplier );
         ~MessageSender();
 
     public:
 
         virtual void run();
         virtual void terminate();
+        virtual void process_command( const std::string& command );
 
     private:
 
         void send_message();
-        void send_message_impl( const std::string& messageString );
-
-    public:
-
-        virtual void process_command( const std::string& command );
-
-    public:
-
-        virtual bool onChannelAvailable( const std::string& serviceAddr, const CosNotifyChannelAdmin::EventChannel_ptr channel, const TA_Base_Core::IChannelLocator_ptr channelLocator );
-        virtual void onChannelUnavailable( const std::string& serviceAddr );
-        std::vector<std::string> m_avaliable_channels;
+        void send_message( const char* data );
+        const char* next_data();
+        void my_sleep();
+        void populate_half_done_event();
+        void parse_filterable_date();
 
     private:
 
-        unsigned long m_sender_number;
-        unsigned long m_location_key;
-        volatile unsigned long m_interval;
-        unsigned long m_entity_key;
-        std::string m_message_load;
-        std::string m_channel_name;
-        std::string m_domain_name;
-        std::string m_type_name;
-        std::string m_filter_data;
-        TA_Base_Core::FilterData m_var_header;
-        TA_Base_Core::FilterData m_filterable_data;
+        ParameterPtr m_parameter;
+        MyChannelObserverPtr m_channel_observer;
         boost::shared_ptr<TA_Base_Core::StructuredEventSupplier> m_supplier;
         volatile bool m_running;
+        char* m_data;
+        std::vector< std::pair<std::string, std::string> > m_filterable_data;
+        CosNotification::StructuredEvent* m_half_done_event;
     };
 
     typedef boost::shared_ptr<MessageSender> MessageSenderPtr;
+
 }
