@@ -27,7 +27,7 @@ private:
     const char* next_data();
     void my_sleep();
     void populate_half_done_event();
-    void parse_filterable_date();
+    static std::vector< std::pair<std::string, std::string> > parse_filterable_date( const std::string& filterable_data_str );
 
 private:
 

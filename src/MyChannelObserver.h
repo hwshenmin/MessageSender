@@ -5,6 +5,7 @@
 struct MyChannelObserver : TA_Base_Core::IChannelObserver
 {
     MyChannelObserver( const std::string& channel_name );
+    ~MyChannelObserver();
 
     bool ready();
 

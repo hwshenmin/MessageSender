@@ -12,6 +12,12 @@ MyChannelObserver::MyChannelObserver( const std::string& channel_name )
 }
 
 
+MyChannelObserver::~MyChannelObserver()
+{
+    TA_Base_Core::ChannelLocatorConnectionMgr::getInstance().detach(this);
+}
+
+
 bool MyChannelObserver::onChannelAvailable( const std::string& serviceAddr, const CosNotifyChannelAdmin::EventChannel_ptr, const TA_Base_Core::IChannelLocator_ptr )
 {
     m_channels.insert( serviceAddr );

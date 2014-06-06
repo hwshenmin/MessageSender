@@ -149,25 +149,9 @@ void MessageSender::my_sleep()
 
     size_t STEP = m_parameter->m_interval;
 
-    if ( 0 < STEP && STEP < 10 )
-    {
-        STEP = 1;
-    }
-    else if ( 10 <= STEP && STEP < 100 )
-    {
-        STEP = 5;
-    }
-    else if ( 100 <= STEP && STEP < 1000 )
-    {
-        STEP = 10;
-    }
-    else if ( 1000 <= STEP && STEP < 10000 )
+    if ( 1000 < STEP )
     {
         STEP = 100;
-    }
-    else
-    {
-        STEP = 1000;
     }
 
     for ( size_t i = 0; i < m_parameter->m_interval && true == m_running; i += STEP )
@@ -191,7 +175,7 @@ void MessageSender::populate_half_done_event()
     m_half_done_event.header.variable_header[1].value <<= TA_Base_Core::RunParams::getInstance().get(RPARAM_ENTITYNAME).c_str();
 
     // Filterable Body
-    parse_filterable_date();
+    m_filterable_data = parse_filterable_date( m_parameter->m_filterable_data );
     m_half_done_event.filterable_data.length( m_filterable_data.size() );
 
     for ( size_t i = 0; i < m_filterable_data.size(); ++i )
@@ -202,17 +186,19 @@ void MessageSender::populate_half_done_event()
 }
 
 
-void MessageSender::parse_filterable_date()
+std::vector< std::pair<std::string, std::string> > MessageSender::parse_filterable_date( const std::string& filterable_data_str )
 {
-    m_filterable_data.clear();
+    std::vector< std::pair<std::string, std::string> > filterable_data;
 
     const char* filterable_data_regex_str = "(?x) ([^ ,;=]+) = ([^ ,;=]+)";
     const boost::regex filterable_data_regex( filterable_data_regex_str );
-    boost::sregex_iterator it( m_parameter->m_filterable_data.begin(), m_parameter->m_filterable_data.end(), filterable_data_regex );
+    boost::sregex_iterator it( filterable_data_str.begin(), filterable_data_str.end(), filterable_data_regex );
     boost::sregex_iterator end;
 
     for ( ; it != end; ++it )
     {
-        m_filterable_data.push_back( std::make_pair( it->str(1), it->str(2) ) );
+        filterable_data.push_back( std::make_pair( it->str(1), it->str(2) ) );
     }
+
+    return filterable_data;
 }
