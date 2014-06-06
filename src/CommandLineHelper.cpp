@@ -3,19 +3,31 @@
 #include "core/utilities/src/RunParams.h"
 #include "core/message/src/PublicationManager.h"
 
+#undef RPARAM_LOCATIONKEY
+#define RPARAM_LocationKey                  "LocationKey"
+#define RPARAM_Number                       "Number"
+#define RPARAM_SupplierNumber               "SupplierNumber"
+#define RPARAM_Channel                      "Channel"
+#define RPARAM_Domain                       "Domain"
+#define RPARAM_Type                         "Type"
+#define RPARAM_FilterableData               "FilterableData"
+#define RPARAM_Region                       "Region"
+#define RPARAM_Interval                     "Interval"
+#define RPARAM_Data                         "Data"
+
 
 CommandLineHelper::CommandLineHelper()
 {
-    unsigned long number            = TA_Base_Core::getRunParamValue( "Number", 1 );
-    unsigned long supplier_number   = TA_Base_Core::getRunParamValue( "SupplierNumber", 1 );
-    unsigned long location_key      = TA_Base_Core::getRunParamValue( RPARAM_LOCATIONKEY, 100 );
-    std::string channel_name        = TA_Base_Core::RunParams::getInstance().get( "Channel" );
-    std::string domain_name         = TA_Base_Core::RunParams::getInstance().get( "Domain" );
-    std::string type_name           = TA_Base_Core::RunParams::getInstance().get( "Type" );
-    std::string filterable_data     = TA_Base_Core::RunParams::getInstance().get( "FilterableData" );
-    std::string region              = TA_Base_Core::RunParams::getInstance().get( "Region" );
-    unsigned long interval          = TA_Base_Core::getRunParamValue( "Interval", 1000 );
-    std::string data                = TA_Base_Core::RunParams::getInstance().get( "Data" );
+    unsigned long number            = TA_Base_Core::getRunParamValue( RPARAM_Number, 1 );
+    unsigned long supplier_number   = TA_Base_Core::getRunParamValue( RPARAM_SupplierNumber, 1 );
+    unsigned long location_key      = TA_Base_Core::getRunParamValue( RPARAM_LocationKey, 100 );
+    unsigned long interval          = TA_Base_Core::getRunParamValue( RPARAM_Interval, 1000 );
+    std::string channel_name        = TA_Base_Core::RunParams::getInstance().get( RPARAM_Channel );
+    std::string domain_name         = TA_Base_Core::RunParams::getInstance().get( RPARAM_Domain );
+    std::string type_name           = TA_Base_Core::RunParams::getInstance().get( RPARAM_Type );
+    std::string filterable_data     = TA_Base_Core::RunParams::getInstance().get( RPARAM_FilterableData );
+    std::string region              = TA_Base_Core::RunParams::getInstance().get( RPARAM_Region );
+    std::string data                = TA_Base_Core::RunParams::getInstance().get( RPARAM_Data );
     MyChannelObserverPtr channel_observer( new MyChannelObserver( channel_name ) );
     std::vector< boost::shared_ptr<TA_Base_Core::StructuredEventSupplier> > suppliers;
 
