@@ -6,43 +6,38 @@
 #include "core/message/src/StructuredEventSupplier.h"
 
 
-namespace TA_Base_Core
+class MessageSender : public TA_Base_Core::Thread,
+                      public ICommandObserver
 {
+public:
 
-    class MessageSender : public TA_Base_Core::Thread,
-                          public ICommandObserver
-    {
-    public:
+    MessageSender( ParameterPtr parameter, boost::shared_ptr<TA_Base_Core::StructuredEventSupplier> supplier, MyChannelObserverPtr channel_observer );
+    ~MessageSender();
 
-        MessageSender( ParameterPtr parameter, boost::shared_ptr<TA_Base_Core::StructuredEventSupplier> supplier );
-        ~MessageSender();
+public:
 
-    public:
+    virtual void run();
+    virtual void terminate();
+    virtual void process_command( const std::string& command );
 
-        virtual void run();
-        virtual void terminate();
-        virtual void process_command( const std::string& command );
+private:
 
-    private:
+    void send_message();
+    void send_message( const char* data );
+    const char* next_data();
+    void my_sleep();
+    void populate_half_done_event();
+    void parse_filterable_date();
 
-        void send_message();
-        void send_message( const char* data );
-        const char* next_data();
-        void my_sleep();
-        void populate_half_done_event();
-        void parse_filterable_date();
+private:
 
-    private:
+    ParameterPtr m_parameter;
+    MyChannelObserverPtr m_channel_observer;
+    boost::shared_ptr<TA_Base_Core::StructuredEventSupplier> m_supplier;
+    volatile bool m_running;
+    char* m_data;
+    std::vector< std::pair<std::string, std::string> > m_filterable_data;
+    CosNotification::StructuredEvent m_half_done_event;
+};
 
-        ParameterPtr m_parameter;
-        MyChannelObserverPtr m_channel_observer;
-        boost::shared_ptr<TA_Base_Core::StructuredEventSupplier> m_supplier;
-        volatile bool m_running;
-        char* m_data;
-        std::vector< std::pair<std::string, std::string> > m_filterable_data;
-        CosNotification::StructuredEvent* m_half_done_event;
-    };
-
-    typedef boost::shared_ptr<MessageSender> MessageSenderPtr;
-
-}
+typedef boost::shared_ptr<MessageSender> MessageSenderPtr;

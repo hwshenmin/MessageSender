@@ -9,220 +9,209 @@
 #include "core/synchronisation/src/ThreadGuard.h"
 
 
-namespace TA_Base_Core
+MessageSender::MessageSender( ParameterPtr parameter, boost::shared_ptr<TA_Base_Core::StructuredEventSupplier> supplier, MyChannelObserverPtr channel_observer )
+    : m_parameter( parameter ),
+      m_supplier( supplier ),
+      m_channel_observer( channel_observer ),
+      m_data( NULL ),
+      m_running( true )
 {
+    m_data = new char[m_parameter->m_data.size() + 11];
+    ::sprintf( m_data, "%10d%s", 0, m_parameter->m_data.c_str() );
 
-    MessageSender::MessageSender( ParameterPtr parameter, boost::shared_ptr<TA_Base_Core::StructuredEventSupplier> supplier )
-        : m_parameter( parameter ),
-          m_supplier( supplier ),
-          m_data( NULL ),
-          m_half_done_event( NULL ),
-          m_running( true )
+    populate_half_done_event();
+
+    start();
+}
+
+
+MessageSender::~MessageSender()
+{
+    terminateAndWait();
+
+    delete m_data;
+    m_data = NULL;
+}
+
+
+void MessageSender::run()
+{
+    while ( m_running )
     {
-        m_channel_observer.reset( new MyChannelObserver( parameter->m_channel_name ) );
+        while ( false == m_channel_observer->ready() && true == m_running )
+        {
+            TA_Base_Core::Thread::sleep( 10 );
+        }
 
-        m_data = new char[m_parameter->m_data.size() + 11];
-        ::sprintf( m_data, "%10d%s", 0, m_parameter->m_data.c_str() );
+        if ( false == m_running )
+        {
+            break;
+        }
 
-        m_half_done_event = new CosNotification::StructuredEvent;
-        populate_half_done_event();
-
-        start();
+        send_message( next_data() );
+        my_sleep();
     }
 
+    m_running = true; // for next time
+}
 
-    MessageSender::~MessageSender()
+
+void MessageSender::terminate()
+{
+    m_running = false;
+}
+
+
+void MessageSender::send_message( const char* data )
+{
+    try
     {
-        terminateAndWait();
+        TA_Base_Core::CommsMessageCorbaDef* comms_message = new TA_Base_Core::CommsMessageCorbaDef;
 
-        delete m_data;
-        m_data = NULL;
+        comms_message->createTime = time( NULL );
+        comms_message->messageTypeKey = m_parameter->m_type_name.c_str();
+        comms_message->assocEntityKey = 0;
+        comms_message->messageState <<= data;
 
-        delete m_half_done_event;
-        m_half_done_event = NULL;
+        CosNotification::StructuredEvent* event = new CosNotification::StructuredEvent( m_half_done_event );
+        event->remainder_of_body <<= comms_message;
+
+        m_supplier->publishEvent( *event );
+    }
+    catch ( std::exception& ex )
+    {
+        std::cout << "MessageSender::send_message - std::exception: " << ex.what() << std::endl;
+        TA_Base_Core::Thread::sleep( 100 );
+    }
+    catch ( ... )
+    {
+        std::cout << "MessageSender::send_message - exception." << std::endl;
+        TA_Base_Core::Thread::sleep( 100 );
+    }
+}
+
+
+const char* MessageSender::next_data()
+{
+    static size_t counter = 0;
+    static TA_Base_Core::NonReEntrantThreadLockable lock;
+
+    {
+        TA_THREADGUARD( lock );
+        ++counter;
     }
 
+    std::string counter_str = boost::lexical_cast<std::string>( counter );
 
-    void MessageSender::run()
+    for ( size_t i = 0; i < counter_str.size() || i < 10; ++i )
     {
-        while ( m_running )
-        {
-            while ( false == m_channel_observer->ready() && true == m_running )
-            {
-                TA_Base_Core::Thread::sleep( 10 );
-            }
-
-            if ( false == m_running )
-            {
-                break;
-            }
-
-            send_message( next_data() );
-            my_sleep();
-        }
-
-        m_running = true; // for next time
+        m_data[i] = ( i < counter_str.size() ? counter_str[i] : ' ' );
     }
 
-
-    void MessageSender::terminate()
+    if ( 0 == counter % 100 )
     {
-        m_running = false;
+        std::cout << "\r" << "TOTAL: " << counter << std::endl;
+    }
+    else if ( 0 == counter % 10 )
+    {
+        std::cout << "\r           \r.";
+    }
+    else
+    {
+        std::cout << ".";
     }
 
+    return m_data;
+}
 
-    void MessageSender::send_message( const char* data )
+
+void MessageSender::process_command( const std::string& command )
+{
+    try
     {
-        try
-        {
-            TA_Base_Core::CommsMessageCorbaDef* comms_message = new TA_Base_Core::CommsMessageCorbaDef;
+        unsigned long interval = boost::lexical_cast<unsigned long>(command);
+        std::cout << "\r" << "INTERVAL CHANGE: FROM " << m_parameter->m_interval << " TO " << interval << std::endl;
+        m_parameter->m_interval = interval;
+    }
+    catch (...)
+    {
+    }
+}
 
-            comms_message->createTime = time( NULL );
-            comms_message->messageTypeKey = m_parameter->m_type_name.c_str();
-            comms_message->assocEntityKey = 0;
-            comms_message->messageState <<= data;
 
-            CosNotification::StructuredEvent* event = new CosNotification::StructuredEvent( *m_half_done_event );
-            event->remainder_of_body <<= comms_message;
-
-            m_supplier->publishEvent( *event );
-        }
-        catch ( std::exception& ex )
-        {
-            std::cout << "MessageSender::send_message - std::exception: " << ex.what() << std::endl;
-            TA_Base_Core::Thread::sleep( 100 );
-        }
-        catch ( ... )
-        {
-            std::cout << "MessageSender::send_message - exception." << std::endl;
-            TA_Base_Core::Thread::sleep( 100 );
-        }
+void MessageSender::my_sleep()
+{
+    if ( 0 == m_parameter->m_interval )
+    {
+        return;
     }
 
+    size_t STEP = m_parameter->m_interval;
 
-    const char* MessageSender::next_data()
+    if ( 0 < STEP && STEP < 10 )
     {
-        static size_t counter = 0;
-        static TA_Base_Core::NonReEntrantThreadLockable lock;
-
-        {
-            TA_THREADGUARD( lock );
-            ++counter;
-        }
-
-        std::string counter_str = boost::lexical_cast<std::string>( counter );
-
-        for ( size_t i = 0; i < counter_str.size() || i < 10; ++i )
-        {
-            m_data[i] = ( i < counter_str.size() ? counter_str[i] : ' ' );
-        }
-
-        if ( 0 == counter % 100 )
-        {
-            std::cout << "\r" << "TOTAL: " << counter << std::endl;
-        }
-        else if ( 0 == counter % 10 )
-        {
-            std::cout << "\r           \r.";
-        }
-        else
-        {
-            std::cout << ".";
-        }
-
-        return m_data;
+        STEP = 1;
+    }
+    else if ( 10 <= STEP && STEP < 100 )
+    {
+        STEP = 5;
+    }
+    else if ( 100 <= STEP && STEP < 1000 )
+    {
+        STEP = 10;
+    }
+    else if ( 1000 <= STEP && STEP < 10000 )
+    {
+        STEP = 100;
+    }
+    else
+    {
+        STEP = 1000;
     }
 
-
-    void MessageSender::process_command( const std::string& command )
+    for ( size_t i = 0; i < m_parameter->m_interval && true == m_running; i += STEP )
     {
-        try
-        {
-            unsigned long interval = boost::lexical_cast<unsigned long>(command);
-            std::cout << "\r" << "INTERVAL CHANGE: FROM " << m_parameter->m_interval << " TO " << interval << std::endl;
-            m_parameter->m_interval = interval;
-        }
-        catch (...)
-        {
-        }
+        TA_Base_Core::Thread::sleep( STEP );
     }
+}
 
 
-    void MessageSender::my_sleep()
+void MessageSender::populate_half_done_event()
+{
+    // Fixed Header
+    m_half_done_event.header.fixed_header.event_type.domain_name = m_parameter->m_domain_name.c_str();
+    m_half_done_event.header.fixed_header.event_type.type_name = m_parameter->m_type_name.c_str();
+
+    // Variable Header
+    m_half_done_event.header.variable_header.length(2);
+    m_half_done_event.header.variable_header[0].name = CosNotification::Priority;
+    m_half_done_event.header.variable_header[0].value <<= static_cast<const char*>( "0" );
+    m_half_done_event.header.variable_header[1].name = TA_Base_Core::SENDER_ENTITY_FIELDNAME;
+    m_half_done_event.header.variable_header[1].value <<= TA_Base_Core::RunParams::getInstance().get(RPARAM_ENTITYNAME).c_str();
+
+    // Filterable Body
+    parse_filterable_date();
+    m_half_done_event.filterable_data.length( m_filterable_data.size() );
+
+    for ( size_t i = 0; i < m_filterable_data.size(); ++i )
     {
-        if ( 0 == m_parameter->m_interval )
-        {
-            return;
-        }
-
-        size_t STEP = m_parameter->m_interval;
-
-        if ( 0 < STEP && STEP < 10 )
-        {
-            STEP = 1;
-        }
-        else if ( 10 <= STEP && STEP < 100 )
-        {
-            STEP = 5;
-        }
-        else if ( 100 <= STEP && STEP < 1000 )
-        {
-            STEP = 10;
-        }
-        else if ( 1000 <= STEP && STEP < 10000 )
-        {
-            STEP = 100;
-        }
-        else
-        {
-            STEP = 1000;
-        }
-
-        for ( size_t i = 0; i < m_parameter->m_interval && true == m_running; i += STEP )
-        {
-            TA_Base_Core::Thread::sleep( STEP );
-        }
+        m_half_done_event.filterable_data[i].name = m_filterable_data[i].first.c_str();
+        m_half_done_event.filterable_data[i].value <<= m_filterable_data[i].second.c_str();
     }
+}
 
 
-    void MessageSender::populate_half_done_event()
+void MessageSender::parse_filterable_date()
+{
+    m_filterable_data.clear();
+
+    const char* filterable_data_regex_str = "(?x) ([^ ,;=]+) = ([^ ,;=]+)";
+    const boost::regex filterable_data_regex( filterable_data_regex_str );
+    boost::sregex_iterator it( m_parameter->m_filterable_data.begin(), m_parameter->m_filterable_data.end(), filterable_data_regex );
+    boost::sregex_iterator end;
+
+    for ( ; it != end; ++it )
     {
-        // Fixed Header
-        m_half_done_event->header.fixed_header.event_type.domain_name = m_parameter->m_domain_name.c_str();
-        m_half_done_event->header.fixed_header.event_type.type_name = m_parameter->m_type_name.c_str();
-
-        // Variable Header
-        m_half_done_event->header.variable_header.length(2);
-        m_half_done_event->header.variable_header[0].name = CosNotification::Priority;
-        m_half_done_event->header.variable_header[0].value <<= static_cast<const char*>( "0" );
-        m_half_done_event->header.variable_header[1].name = TA_Base_Core::SENDER_ENTITY_FIELDNAME;
-        m_half_done_event->header.variable_header[1].value <<= TA_Base_Core::RunParams::getInstance().get(RPARAM_ENTITYNAME).c_str();
-
-        // Filterable Body
-        parse_filterable_date();
-        m_half_done_event->filterable_data.length( m_filterable_data.size() );
-
-        for ( size_t i = 0; i < m_filterable_data.size(); ++i )
-        {
-            m_half_done_event->filterable_data[i].name = m_filterable_data[i].first.c_str();
-            m_half_done_event->filterable_data[i].value <<= m_filterable_data[i].second.c_str();
-        }
+        m_filterable_data.push_back( std::make_pair( it->str(1), it->str(2) ) );
     }
-
-
-    void MessageSender::parse_filterable_date()
-    {
-        m_filterable_data.clear();
-
-        const char* filterable_data_regex_str = "(?x) ([^ ,;=]+) = ([^ ,;=]+)";
-        const boost::regex filterable_data_regex( filterable_data_regex_str );
-        boost::sregex_iterator it( m_parameter->m_filterable_data.begin(), m_parameter->m_filterable_data.end(), filterable_data_regex );
-        boost::sregex_iterator end;
-
-        for ( ; it != end; ++it )
-        {
-            m_filterable_data.push_back( std::make_pair( it->str(1), it->str(2) ) );
-        }
-    }
-
 }
