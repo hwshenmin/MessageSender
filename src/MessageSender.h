@@ -11,7 +11,7 @@ class MessageSender : public TA_Base_Core::Thread,
 {
 public:
 
-    MessageSender( ParameterPtr parameter, boost::shared_ptr<TA_Base_Core::StructuredEventSupplier> supplier, MyChannelObserverPtr channel_observer );
+    MessageSender( ParameterPtr parameter, MyChannelObserverPtr channel_observer );
     ~MessageSender();
 
 public:
@@ -41,3 +41,4 @@ private:
 };
 
 typedef boost::shared_ptr<MessageSender> MessageSenderPtr;
+typedef std::vector<MessageSenderPtr> MessageSenderPtrList;

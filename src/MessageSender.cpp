@@ -9,13 +9,14 @@
 #include "core/synchronisation/src/ThreadGuard.h"
 
 
-MessageSender::MessageSender( ParameterPtr parameter, boost::shared_ptr<TA_Base_Core::StructuredEventSupplier> supplier, MyChannelObserverPtr channel_observer )
+MessageSender::MessageSender( ParameterPtr parameter, MyChannelObserverPtr channel_observer )
     : m_parameter( parameter ),
-      m_supplier( supplier ),
       m_channel_observer( channel_observer ),
       m_data( NULL ),
       m_running( true )
 {
+    m_supplier = m_parameter->m_supplier;
+
     m_data = new char[m_parameter->m_data.size() + 11];
     ::sprintf( m_data, "%10d%s", 0, m_parameter->m_data.c_str() );
 

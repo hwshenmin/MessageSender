@@ -13,13 +13,12 @@ int main(int argc, char* argv[])
 
     CommandLineHelper command_line_helper;
     ParameterPtrList parameters = command_line_helper.get_parameters();
-    boost::shared_ptr<TA_Base_Core::StructuredEventSupplier> supplier( TA_Base_Core::gGetStructuredEventSupplierForChannel( TA_Base_Core::RunParams::getInstance().get( "Channel" ) ) );
     MyChannelObserverPtr channel_observer( new MyChannelObserver( TA_Base_Core::RunParams::getInstance().get( "Channel" ) ) );
-    std::vector<MessageSenderPtr> m_senders;
+    MessageSenderPtrList m_senders;
 
     for ( size_t i = 0; i < parameters.size(); ++i )
     {
-        MessageSenderPtr message_sender( new MessageSender( parameters[i], supplier, channel_observer ) );
+        MessageSenderPtr message_sender( new MessageSender( parameters[i], channel_observer ) );
         main_guard.register_command_observer( message_sender.get() );
         m_senders.push_back( message_sender );
     }

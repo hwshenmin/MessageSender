@@ -109,7 +109,7 @@ namespace TA_Base_Core
 
         // Do we already have a supplier for this channel?
         ChannelToSupplierMap::iterator iter = s_channelToSupplierMap.find( channelName );
-        if ( iter != s_channelToSupplierMap.end() && 1 == TA_Base_Core::getRunParamValue( "RegionFilterNumber", 1 )  )
+        if ( iter != s_channelToSupplierMap.end() && 1 == TA_Base_Core::getRunParamValue( "SupplierNumber", 1 )  )
         {
             // Yes. Return existing supplier
             return iter->second.first;
@@ -149,4 +149,3 @@ namespace TA_Base_Core
     }
 
 }; // TA_Base_Core
-
