@@ -1,4 +1,5 @@
 #pragma once
+#include "MyChannelObserver.h"
 #include "core\message\src\StructuredEventSupplier.h"
 
 
@@ -10,14 +11,16 @@ struct Parameter
                const std::string& filterable_data,
                const std::string& data,
                unsigned long interval,
-               boost::shared_ptr<TA_Base_Core::StructuredEventSupplier> supplier )
+               boost::shared_ptr<TA_Base_Core::StructuredEventSupplier> supplier,
+               MyChannelObserverPtr channel_observer )
         : m_channel_name( channel_name ),
           m_domain_name( domain_name ),
           m_type_name( type_name ),
           m_filterable_data( filterable_data ),
           m_data( data ),
           m_interval( interval ),
-          m_supplier( supplier )
+          m_supplier( supplier ),
+          m_channel_observer( channel_observer )
     {
     }
 
@@ -28,6 +31,7 @@ struct Parameter
     std::string m_data;
     unsigned long m_interval;
     boost::shared_ptr<TA_Base_Core::StructuredEventSupplier> m_supplier;
+    MyChannelObserverPtr m_channel_observer;
 };
 
 typedef boost::shared_ptr<Parameter> ParameterPtr;

@@ -7,18 +7,16 @@
 #include "core/message/src/MessagePublicationManager.h"
 
 
-int main(int argc, char* argv[])
+void main(int argc, char* argv[])
 {
     MainGuard main_guard( argc, argv );
-
     CommandLineHelper command_line_helper;
     ParameterPtrList parameters = command_line_helper.get_parameters();
-    MyChannelObserverPtr channel_observer( new MyChannelObserver( TA_Base_Core::RunParams::getInstance().get( "Channel" ) ) );
     MessageSenderPtrList m_senders;
 
     for ( size_t i = 0; i < parameters.size(); ++i )
     {
-        MessageSenderPtr message_sender( new MessageSender( parameters[i], channel_observer ) );
+        MessageSenderPtr message_sender( new MessageSender( parameters[i] ) );
         main_guard.register_command_observer( message_sender.get() );
         m_senders.push_back( message_sender );
     }
@@ -29,6 +27,4 @@ int main(int argc, char* argv[])
     {
         m_senders[i]->terminate();
     }
-
-    return 0;
 }

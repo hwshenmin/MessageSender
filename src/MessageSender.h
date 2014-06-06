@@ -11,7 +11,7 @@ class MessageSender : public TA_Base_Core::Thread,
 {
 public:
 
-    MessageSender( ParameterPtr parameter, MyChannelObserverPtr channel_observer );
+    MessageSender( ParameterPtr parameter );
     ~MessageSender();
 
 public:

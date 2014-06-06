@@ -9,13 +9,13 @@
 #include "core/synchronisation/src/ThreadGuard.h"
 
 
-MessageSender::MessageSender( ParameterPtr parameter, MyChannelObserverPtr channel_observer )
+MessageSender::MessageSender( ParameterPtr parameter )
     : m_parameter( parameter ),
-      m_channel_observer( channel_observer ),
       m_data( NULL ),
       m_running( true )
 {
     m_supplier = m_parameter->m_supplier;
+    m_channel_observer = m_parameter->m_channel_observer;
 
     m_data = new char[m_parameter->m_data.size() + 11];
     ::sprintf( m_data, "%10d%s", 0, m_parameter->m_data.c_str() );
@@ -113,9 +113,9 @@ const char* MessageSender::next_data()
     {
         std::cout << "\r" << "TOTAL: " << counter << std::endl;
     }
-    else if ( 0 == counter % 10 )
+    else if ( 0 == counter % 20 )
     {
-        std::cout << "\r           \r.";
+        std::cout << "\r                                        \r.";
     }
     else
     {

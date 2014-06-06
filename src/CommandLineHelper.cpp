@@ -16,7 +16,7 @@ CommandLineHelper::CommandLineHelper()
     std::string region              = TA_Base_Core::RunParams::getInstance().get( "Region" );
     unsigned long interval          = TA_Base_Core::getRunParamValue( "Interval", 1000 );
     std::string data                = TA_Base_Core::RunParams::getInstance().get( "Data" );
-
+    MyChannelObserverPtr channel_observer( new MyChannelObserver( channel_name ) );
     std::vector< boost::shared_ptr<TA_Base_Core::StructuredEventSupplier> > suppliers;
 
     if ( 1 == supplier_number )
@@ -43,7 +43,7 @@ CommandLineHelper::CommandLineHelper()
     {
         for ( size_t i = 0; i < number; ++i )
         {
-            m_parameters.push_back( ParameterPtr( new Parameter( channel_name, domain_name, type_name, filterable_data, data, interval, suppliers[i % supplier_number] ) ) );
+            m_parameters.push_back( ParameterPtr( new Parameter( channel_name, domain_name, type_name, filterable_data, data, interval, suppliers[i % supplier_number], channel_observer ) ) );
         }
     }
     else
@@ -58,7 +58,7 @@ CommandLineHelper::CommandLineHelper()
             }
 
             filterable_data_strm << "Region=" << boost::lexical_cast<size_t>( region ) + i;
-            m_parameters.push_back( ParameterPtr( new Parameter( channel_name, domain_name, type_name, filterable_data_strm.str(), data, interval, suppliers[i % supplier_number] ) ) );
+            m_parameters.push_back( ParameterPtr( new Parameter( channel_name, domain_name, type_name, filterable_data_strm.str(), data, interval, suppliers[i % supplier_number], channel_observer ) ) );
         }
     }
 }
