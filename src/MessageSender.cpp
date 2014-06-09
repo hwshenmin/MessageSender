@@ -137,7 +137,14 @@ size_t MessageSender::next_id()
 
 void MessageSender::print_status( size_t counter )
 {
-    if ( 10 < m_parameter->m_interval && true == m_is_multiple_thread )
+    if ( 0 == m_parameter->m_interval )
+    {
+        if ( 0 == counter % 1000 )
+        {
+            std::cout << "\r" << "TOTAL: " << counter << std::endl;
+        }
+    }
+    else if ( 10 < m_parameter->m_interval && true == m_is_multiple_thread )
     {
         s_cout_lock.acquire();
 
@@ -147,7 +154,7 @@ void MessageSender::print_status( size_t counter )
         }
         else if ( 0 == counter % 20 )
         {
-            std::cout << "\r                 \r.";
+            std::cout << "\r                     \r.";
         }
         else
         {
@@ -164,7 +171,7 @@ void MessageSender::print_status( size_t counter )
         }
         else if ( 0 == counter % 20 )
         {
-            std::cout << "\r                 \r.";
+            std::cout << "\r                     \r.";
         }
         else
         {
