@@ -3,8 +3,6 @@
 #include "MessageSender.h"
 #include "Parameter.h"
 #include "CommandLineHelper.h"
-#include "MyChannelObserver.h"
-#include "core/message/src/MessagePublicationManager.h"
 
 
 void main(int argc, char* argv[])

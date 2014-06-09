@@ -5,8 +5,11 @@
 #include "core/message/IDL/src/CommsMessageCorbaDef.h"
 #include "core/message/src/MessageConstants.h"
 #include "core/message/src/ConnectionChecker.h"
-#include "core/synchronisation/src/NonReEntrantThreadLockable.h"
-#include "core/synchronisation/src/ThreadGuard.h"
+
+
+size_t MessageSender::s_counter = 0;
+TA_Base_Core::NonReEntrantThreadLockable MessageSender::s_counter_lock;
+TA_Base_Core::NonReEntrantThreadLockable MessageSender::s_cout_lock;
 
 
 MessageSender::MessageSender( ParameterPtr parameter )
@@ -14,11 +17,12 @@ MessageSender::MessageSender( ParameterPtr parameter )
       m_data( NULL ),
       m_running( true )
 {
+    m_is_multiple_thread = ( 1 < TA_Base_Core::getRunParamValue( "Number", 1 ) );
     m_supplier = m_parameter->m_supplier;
     m_channel_observer = m_parameter->m_channel_observer;
 
     m_data = new char[m_parameter->m_data.size() + 11];
-    ::sprintf( m_data, "%10d%s", 0, m_parameter->m_data.c_str() );
+    ::sprintf( m_data, "%-10d%s", 0, m_parameter->m_data.c_str() );
 
     populate_half_done_event();
 
@@ -94,35 +98,79 @@ void MessageSender::send_message( const char* data )
 
 const char* MessageSender::next_data()
 {
-    static size_t counter = 0;
-    static TA_Base_Core::NonReEntrantThreadLockable lock;
-
-    {
-        TA_THREADGUARD( lock );
-        ++counter;
-    }
+    size_t counter = next_id();
 
     std::string counter_str = boost::lexical_cast<std::string>( counter );
 
-    for ( size_t i = 0; i < counter_str.size() || i < 10; ++i )
+    for ( size_t i = 0, size = counter_str.size(); i < size || i < 10; ++i )
     {
-        m_data[i] = ( i < counter_str.size() ? counter_str[i] : ' ' );
+        if ( size <= i && ' ' == m_data[i] )
+        {
+            break;
+        }
+
+        m_data[i] = ( i < size ? counter_str[i] : ' ' );
     }
 
-    if ( 0 == counter % 100 )
+    print_status( counter );
+
+    return m_data;
+}
+
+
+size_t MessageSender::next_id()
+{
+    if ( true == m_is_multiple_thread )
     {
-        std::cout << "\r" << "TOTAL: " << counter << std::endl;
-    }
-    else if ( 0 == counter % 20 )
-    {
-        std::cout << "\r                                        \r.";
+        s_counter_lock.acquire();
+        ++s_counter;
+        s_counter_lock.release();
     }
     else
     {
-        std::cout << ".";
+        ++s_counter;
     }
 
-    return m_data;
+    return s_counter;
+}
+
+
+void MessageSender::print_status( size_t counter )
+{
+    if ( 10 < m_parameter->m_interval && true == m_is_multiple_thread )
+    {
+        s_cout_lock.acquire();
+
+        if ( 0 == counter % 100 )
+        {
+            std::cout << "\r" << "TOTAL: " << counter << std::endl;
+        }
+        else if ( 0 == counter % 20 )
+        {
+            std::cout << "\r                 \r.";
+        }
+        else
+        {
+            std::cout << ".";
+        }
+
+        s_cout_lock.release();
+    }
+    else
+    {
+        if ( 0 == counter % 100 )
+        {
+            std::cout << "\r" << "TOTAL: " << counter << std::endl;
+        }
+        else if ( 0 == counter % 20 )
+        {
+            std::cout << "\r                 \r.";
+        }
+        else
+        {
+            std::cout << ".";
+        }
+    }
 }
 
 
