@@ -3,7 +3,6 @@
 #include "core/utilities/src/RunParams.h"
 #include "core/message/src/PublicationManager.h"
 
-#undef RPARAM_LOCATIONKEY
 #define RPARAM_LocationKey                  "LocationKey"
 #define RPARAM_Number                       "Number"
 #define RPARAM_SupplierNumber               "SupplierNumber"
