@@ -4,7 +4,7 @@
 #include "core/message/src/MessagePublicationManager.h"
 #include "core/message/IDL/src/CommsMessageCorbaDef.h"
 #include "core/message/src/MessageConstants.h"
-#include "core/message/src/ConnectionChecker.h"
+#include "core/message/src/ChannelLocatorConnectionMgr.h"
 
 
 size_t MessageSender::s_counter = 0;

@@ -1,6 +1,6 @@
 #include "stdafx.h"
 #include "MyChannelObserver.h"
-#include "core/message/src/ConnectionChecker.h"
+#include "core/message/src/ChannelLocatorConnectionMgr.h"
 #include "core/utilities/src/RunParams.h"
 
 

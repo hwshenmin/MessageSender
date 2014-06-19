@@ -28,7 +28,7 @@
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
-				CommandLine=""
+				CommandLine="IF EXIST Debug\vc90.pdb DEL /Q /F Debug\vc90.pdb&#x0D;&#x0A;IF EXIST Debug\vc90.idb DEL /Q /F Debug\vc90.idb&#x0D;&#x0A;MKLINK /H Debug\vc90.pdb ..\MessageUtility\Debug\vc90.pdb&#x0D;&#x0A;MKLINK /H Debug\vc90.idb ..\MessageUtility\Debug\vc90.idb"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
@@ -48,19 +48,20 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories="..\MessageUtility\src;src;..\..\..\..\core\threads\src;..\..\..\..\;..\..\..\..\..\cots\omniORB\omniORB_4.1.6;..\..\..\..\..\cots\omniORB\omniORB_4.1.6\include;..\..\..\..\..\cots\omniORB\omniORB_4.1.6\include\COS;..\..\..\..\..\cots\boost\boost_1_39_0;..\..\..\..\..\..\build\win32_n\transactive;..\..\..\..\..\..\build\win32_n\transactive\core\message\IDL\src;..\..\..\..\..\..\build\win32_n\transactive\core\exceptions\IDL\src;..\..\..\..\..\..\build\win32_n\transactive\core\alarm\IDL\src"
-				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;__WIN32__;__x86__;__NT__;_AFXDLL;__OSVERSION__=4;_USE_32BIT_TIME_T;_CRT_SECURE_NO_WARNINGS"
+				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;__WIN32__;__x86__;__NT__;_AFXDLL;__OSVERSION__=4;_USE_32BIT_TIME_T;_CRT_SECURE_NO_WARNINGS;__OMNIORB4__;WINVER=0x0601;WIN32_LEAN_AND_MEAN;NOGDICAPMASKS;NOVIRTUALKEYCODES;NOWINMESSAGES;NOWINSTYLES;NOSYSMETRICS;NOMENUS;NOICONS;NOKEYSTATES;NOSYSCOMMANDS;NORASTEROPS;NOSHOWWINDOW;OEMRESOURCE;NOATOM;NOCLIPBOARD;NOCOLOR;NOCTLMGR;NODRAWTEXT;NOGDI;NOKERNEL;NOUSER;__NONLS;NOMB;NOMEMMGR;NOMETAFILE;NOMINMAX;NOMSG;NOOPENFILE;NOSCROLL;NOSERVICE;NOSOUND;NOTEXTMETRIC;NOWH;NOWINOFFSETS;NOCOMM;NOKANJI;NOHELP;NOPROFILER;NODEFERWINDOWPOS;NOMCX"
+				StringPooling="true"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
 				RuntimeTypeInfo="true"
 				UsePrecompiledHeader="2"
-				PrecompiledHeaderFile="$(ConfigurationName)\$(ProjectName).pch"
+				PrecompiledHeaderFile="..\MessageUtility\Debug\MessageUtility.pch"
 				AssemblerListingLocation="$(IntDir)\"
 				ObjectFile="$(IntDir)\"
 				ProgramDataBaseFileName="$(IntDir)\"
 				WarningLevel="3"
 				SuppressStartupBanner="true"
-				DebugInformationFormat="3"
+				DebugInformationFormat="4"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -273,6 +274,7 @@
 				>
 				<FileConfiguration
 					Name="Debug|Win32"
+					ExcludedFromBuild="true"
 					>
 					<Tool
 						Name="VCCLCompilerTool"

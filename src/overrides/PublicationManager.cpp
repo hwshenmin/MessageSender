@@ -20,7 +20,7 @@
 #include "stdafx.h"
 #include "core/message/src/PublicationManager.h"
 #include "core/message/src/StructuredEventSupplier.h"
-#include "core/message/src/ConnectionChecker.h"
+#include "core/message/src/ChannelLocatorConnectionMgr.h"
 #include "core/message/src/TA_CosUtility.h"
 #include "core/utilities/src/DebugUtil.h"
 #include "core/synchronisation/src/NonReEntrantThreadLockable.h"
